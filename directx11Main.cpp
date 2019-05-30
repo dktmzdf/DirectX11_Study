@@ -19,7 +19,7 @@ directx11Main::directx11Main(const std::shared_ptr<DX::DeviceResources>& deviceR
 
 	m_fpsTextRenderer = std::unique_ptr<SampleFpsTextRenderer>(new SampleFpsTextRenderer(m_deviceResources));
 
-	m_controller = nullptr;
+	
 	// TODO: 기본 가변 timestep 모드 외에 다른 설정을 하려면 타이머 설정을 변경합니다.
 	// 예: 60FPS 고정 timestep 업데이트 논리일 경우 다음을 호출합니다.
 	/*
@@ -44,6 +44,8 @@ void directx11Main::CreateWindowSizeDependentResources()
 // 프레임당 한 번 응용 프로그램 상태를 업데이트합니다.
 void directx11Main::Update() 
 {
+	
+	
 	// 장면 개체를 업데이트합니다.
 	m_timer.Tick([&]()
 	{

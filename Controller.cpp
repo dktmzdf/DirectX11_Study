@@ -49,6 +49,7 @@ InputController::InputController(_In_ CoreWindow^ window, _In_ CoreDispatcher^ d
     m_gamepadsChanged(true)
 {
     InitWindow(window);
+	
 }
 
 InputController::InputController(_In_ CoreWindow^ window):
@@ -63,6 +64,7 @@ InputController::InputController(_In_ CoreWindow^ window):
     m_gamepadsChanged(true)
 {
     InitWindow(window);
+	
 }
 
 void InputController::InitWindow(_In_ CoreWindow^ window)
@@ -124,6 +126,41 @@ bool InputController::IsPauseRequested()
         }
     }
     return false;
+}
+
+bool InputController::IsEscRequested()
+{
+	String^ narrow_string = nullptr;
+	if (m_esc)
+	{
+		narrow_string = ref new String(L"true\n");
+		
+	}
+	else 
+		narrow_string = ref new String(L"false\n");
+	
+	const wchar_t *format = narrow_string->Data();
+	DebugTrace(format);
+
+	switch (m_state)
+	{
+	case InputControllerState::Active:
+		UpdatePollingDevices();
+		
+		if (m_esc)
+		{
+#ifdef MOVELOOKCONTROLLER_TRACE
+			DebugTrace(L"IsEscRequested == true\n");
+#endif
+			m_esc = false;
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	return false;
 }
 
 //----------------------------------------------------------------------
@@ -583,6 +620,12 @@ void InputController::OnKeyDown(
         m_down = true;
     if (Key == VirtualKey::P)
         m_pause = true;
+	if (Key == VirtualKey::Escape)
+	{
+		
+		m_esc = true;
+	}
+	
 }
 
 //----------------------------------------------------------------------
@@ -617,6 +660,8 @@ void InputController::OnKeyUp(
             m_pause = false;
         }
     }
+	
+
 }
 
 //----------------------------------------------------------------------
@@ -627,6 +672,7 @@ void InputController::ResetState()
     // Disable any active pointer IDs to stop all interaction.
     m_buttonPressed = false;
     m_pausePressed = false;
+    m_escPressed = false;
     m_buttonInUse = false;
     m_moveInUse = false;
     m_lookInUse = false;
@@ -647,6 +693,7 @@ void InputController::ResetState()
     m_up = false;
     m_down = false;
     m_pause = false;
+	m_esc = false;
 }
 
 //----------------------------------------------------------------------

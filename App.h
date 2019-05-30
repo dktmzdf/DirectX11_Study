@@ -40,6 +40,7 @@ namespace directx11
 		std::unique_ptr<directx11Main> m_main;
 		bool m_windowClosed;
 		bool m_windowVisible;
+		InputController^ m_controller;
 	};
 }
 

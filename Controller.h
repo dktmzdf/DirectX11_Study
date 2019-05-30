@@ -10,7 +10,7 @@
 //*********************************************************
 
 #pragma once
-
+#define MOVELOOKCONTROLLER_TRACE
 // MoveLookController:
 // This is the class that handles input events and turns it into player
 // intent for movement ("move") camera ("look") and other actions.
@@ -142,6 +142,8 @@ internal:
     bool IsPressComplete();
     bool IsPauseRequested();
 
+	bool IsEscRequested();
+
     DirectX::XMFLOAT3 Velocity();
     DirectX::XMFLOAT3 LookDirection();
     float Pitch();
@@ -263,10 +265,14 @@ private:
     bool                        m_up;
     bool                        m_down;
     bool                        m_pause;
+	bool						m_esc;
 
     // Game controller related members.
     Windows::Gaming::Input::Gamepad^    m_activeGamepad;
     std::atomic<bool>                   m_gamepadsChanged;
     bool                                m_gamepadStartButtonInUse;
     bool                                m_gamepadTriggerInUse;
+
+	//Escape game
+	bool						m_escPressed;
 };

@@ -86,14 +86,33 @@ void App::Load(Platform::String^ entryPoint)
 	if (m_main == nullptr)
 	{
 		m_main = std::unique_ptr<directx11Main>(new directx11Main(m_deviceResources));
+		m_controller = ref new InputController(Windows::UI::Core::CoreWindow::GetForCurrentThread());
+		
 	}
 }
 
 // 이 메서드는 창이 활성화된 후 호출됩니다.
 void App::Run()
 {
+	m_controller->Active(true);
 	while (!m_windowClosed)
 	{
+		
+		m_controller->Update();
+		
+		if (m_controller->IsEscRequested())
+		{
+			// Generate the message string.
+			const wchar_t *format = L"fuck\n";
+			va_list args;
+			va_start(args, format);
+			wchar_t message[1024];
+			vswprintf_s(message, 1024, format, args);
+			OutputDebugStringW(message);
+			m_windowClosed = true;
+			break;
+		}
+
 		if (m_windowVisible)
 		{
 			CoreWindow::GetForCurrentThread()->Dispatcher->ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
@@ -108,8 +127,11 @@ void App::Run()
 		else
 		{
 			CoreWindow::GetForCurrentThread()->Dispatcher->ProcessEvents(CoreProcessEventsOption::ProcessOneAndAllPending);
+
 		}
+		
 	}
+
 }
 
 // IFrameworkView에 필요합니다.

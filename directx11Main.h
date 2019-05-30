@@ -4,7 +4,7 @@
 #include "Common\DeviceResources.h"
 #include "Content\Sample3DSceneRenderer.h"
 #include "Content\SampleFpsTextRenderer.h"
-#include "MoveLookController.h"
+#include "Controller.h"
 
 // 화면의 Direct2D 및 3D 콘텐츠를 렌더링합니다.
 namespace directx11
@@ -22,9 +22,7 @@ namespace directx11
 		virtual void OnDeviceLost();
 		virtual void OnDeviceRestored();
 
-		void Grid_KeyDown(Platform::Object^ sender, Windows::UI::Xaml::Input::KeyRoutedEventArgs^ e);
-
-		void Grid_KeyUp(Platform::Object ^ sender, Windows::UI::Xaml::Input::KeyRoutedEventArgs ^ e);
+		
 
 	private:
 		// 장치 리소스에 대한 캐시된 포인터입니다.
@@ -37,6 +35,5 @@ namespace directx11
 		// 렌더링 루프 타이머입니다.
 		DX::StepTimer m_timer;
 
-		InputController^ m_controller;
 	};
 }
