@@ -37,6 +37,6 @@ namespace directx11
 		// 렌더링 루프 타이머입니다.
 		DX::StepTimer m_timer;
 
-		MoveLookController^ m_controller;
+		InputController^ m_controller;
 	};
 }

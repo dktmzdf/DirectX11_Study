@@ -97,28 +97,28 @@
 // Uncomment the next line to print debug tracing information.
 // #define MOVELOOKCONTROLLER_TRACE 1
 
-enum class MoveLookControllerState
+enum class InputControllerState
 {
     None,
     WaitForInput,
     Active,
 };
 
-namespace MoveLookConstants
+namespace InputConstants
 {
     static const float RotationGain = 0.008f;       // Sensitivity adjustment for look controller.
     static const float MovementGain = 2.0f;         // Sensitivity adjustment for move controller.
 };
 
-ref class MoveLookController
+ref class InputController
 {
 internal:
     // A CoreDispatcher is only needed when running in a XAML app.
-    MoveLookController(
+    InputController(
         _In_ Windows::UI::Core::CoreWindow^ window,
         _In_ Windows::UI::Core::CoreDispatcher^ dispatcher
         );
-    MoveLookController(_In_ Windows::UI::Core::CoreWindow^ window);
+    InputController(_In_ Windows::UI::Core::CoreWindow^ window);
 
     void InitWindow(_In_ Windows::UI::Core::CoreWindow^ window);
 
@@ -212,7 +212,7 @@ private:
     Windows::UI::Core::CoreDispatcher^  m_dispatcher;
 
     // Properties of the controller object.
-    MoveLookControllerState     m_state;
+    InputControllerState     m_state;
     DirectX::XMFLOAT3           m_velocity;             // How far we move in this frame.
     float                       m_pitch;
     float                       m_yaw;                  // Orientation euler angles in radians.

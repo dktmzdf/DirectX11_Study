@@ -10,7 +10,7 @@
 //*********************************************************
 
 #include "pch.h"
-#include "MoveLookController.h"
+#include "Controller.h"
 
 
 using namespace DirectX;
@@ -37,13 +37,13 @@ using namespace Windows::System;
 // the CoreWindow.  The dispatcher can be used to marshal execution back to
 // the Xaml UI thread which does have a CoreWindow.  The Dispatcher is cached
 // to enable execution of code on the UI thread to turn on and off the cursor glyph.
-MoveLookController::MoveLookController(_In_ CoreWindow^ window, _In_ CoreDispatcher^ dispatcher):
+InputController::InputController(_In_ CoreWindow^ window, _In_ CoreDispatcher^ dispatcher):
     m_dispatcher(dispatcher),
     m_activeGamepad(nullptr),
     m_autoFire(true),
     m_pitch(0.0f),
     m_yaw(0.0f),
-    m_state(MoveLookControllerState::None),
+    m_state(InputControllerState::None),
     m_gamepadStartButtonInUse(false),
     m_gamepadTriggerInUse(false),
     m_gamepadsChanged(true)
@@ -51,13 +51,13 @@ MoveLookController::MoveLookController(_In_ CoreWindow^ window, _In_ CoreDispatc
     InitWindow(window);
 }
 
-MoveLookController::MoveLookController(_In_ CoreWindow^ window):
+InputController::InputController(_In_ CoreWindow^ window):
     m_dispatcher(nullptr),
     m_activeGamepad(nullptr),
     m_autoFire(true),
     m_pitch(0.0f),
     m_yaw(0.0f),
-    m_state(MoveLookControllerState::None),
+    m_state(InputControllerState::None),
     m_gamepadStartButtonInUse(false),
     m_gamepadTriggerInUse(false),
     m_gamepadsChanged(true)
@@ -65,50 +65,50 @@ MoveLookController::MoveLookController(_In_ CoreWindow^ window):
     InitWindow(window);
 }
 
-void MoveLookController::InitWindow(_In_ CoreWindow^ window)
+void InputController::InitWindow(_In_ CoreWindow^ window)
 {
     ResetState();
 
     window->PointerPressed +=
-        ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &MoveLookController::OnPointerPressed);
+        ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &InputController::OnPointerPressed);
 
     window->PointerMoved +=
-        ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &MoveLookController::OnPointerMoved);
+        ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &InputController::OnPointerMoved);
 
     window->PointerReleased +=
-        ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &MoveLookController::OnPointerReleased);
+        ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &InputController::OnPointerReleased);
 
     window->PointerExited +=
-        ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &MoveLookController::OnPointerExited);
+        ref new TypedEventHandler<CoreWindow^, PointerEventArgs^>(this, &InputController::OnPointerExited);
 
     window->KeyDown +=
-        ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &MoveLookController::OnKeyDown);
+        ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &InputController::OnKeyDown);
 
     window->KeyUp +=
-        ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &MoveLookController::OnKeyUp);
+        ref new TypedEventHandler<CoreWindow^, KeyEventArgs^>(this, &InputController::OnKeyUp);
 
     // There is a separate handler for mouse only relative mouse movement events.
     MouseDevice::GetForCurrentView()->MouseMoved +=
-        ref new TypedEventHandler<MouseDevice^, MouseEventArgs^>(this, &MoveLookController::OnMouseMoved);
+        ref new TypedEventHandler<MouseDevice^, MouseEventArgs^>(this, &InputController::OnMouseMoved);
 
     SystemNavigationManager::GetForCurrentView()->BackRequested +=
-            ref new EventHandler<BackRequestedEventArgs^>(this, &MoveLookController::OnBackRequested);
+            ref new EventHandler<BackRequestedEventArgs^>(this, &InputController::OnBackRequested);
 
     // Detect gamepad connection and disconnection events.
     Gamepad::GamepadAdded +=
-        ref new EventHandler<Gamepad^>(this, &MoveLookController::OnGamepadAdded);
+        ref new EventHandler<Gamepad^>(this, &InputController::OnGamepadAdded);
 
     Gamepad::GamepadRemoved +=
-        ref new EventHandler<Gamepad^>(this, &MoveLookController::OnGamepadRemoved);
+        ref new EventHandler<Gamepad^>(this, &InputController::OnGamepadRemoved);
 }
 
 //----------------------------------------------------------------------
 
-bool MoveLookController::IsPauseRequested()
+bool InputController::IsPauseRequested()
 {
     switch (m_state)
     {
-    case MoveLookControllerState::Active:
+    case InputControllerState::Active:
         UpdatePollingDevices();
         if (m_pausePressed)
         {
@@ -128,9 +128,9 @@ bool MoveLookController::IsPauseRequested()
 
 //----------------------------------------------------------------------
 
-bool MoveLookController::IsFiring()
+bool InputController::IsFiring()
 {
-    if (m_state == MoveLookControllerState::Active)
+    if (m_state == InputControllerState::Active)
     {
         if (m_autoFire)
         {
@@ -150,11 +150,11 @@ bool MoveLookController::IsFiring()
 
 //----------------------------------------------------------------------
 
-bool MoveLookController::IsPressComplete()
+bool InputController::IsPressComplete()
 {
     switch (m_state)
     {
-    case MoveLookControllerState::WaitForInput:
+    case InputControllerState::WaitForInput:
         UpdatePollingDevices();
         if (m_buttonPressed)
         {
@@ -176,7 +176,7 @@ bool MoveLookController::IsPressComplete()
 
 //----------------------------------------------------------------------
 
-void MoveLookController::OnPointerPressed(
+void InputController::OnPointerPressed(
     _In_ CoreWindow^ /* sender */,
     _In_ PointerEventArgs^ args
     )
@@ -196,7 +196,7 @@ void MoveLookController::OnPointerPressed(
 
     switch (m_state)
     {
-    case MoveLookControllerState::WaitForInput:
+    case InputControllerState::WaitForInput:
         if (position.x > m_buttonUpperLeft.x &&
             position.x < m_buttonLowerRight.x &&
             position.y > m_buttonUpperLeft.y &&
@@ -211,7 +211,7 @@ void MoveLookController::OnPointerPressed(
         }
         break;
 
-    case MoveLookControllerState::Active:
+    case InputControllerState::Active:
         switch (pointerDeviceType)
         {
         case Windows::Devices::Input::PointerDeviceType::Touch:
@@ -314,7 +314,7 @@ void MoveLookController::OnPointerPressed(
 
 //----------------------------------------------------------------------
 
-void MoveLookController::OnPointerMoved(
+void InputController::OnPointerMoved(
     _In_ CoreWindow^ /* sender */,
     _In_ PointerEventArgs^ args
     )
@@ -333,7 +333,7 @@ void MoveLookController::OnPointerMoved(
 
     switch (m_state)
     {
-    case MoveLookControllerState::Active:
+    case InputControllerState::Active:
         // Decide which control this pointer is operating.
         if (pointerID == m_movePointerID)
         {
@@ -347,8 +347,8 @@ void MoveLookController::OnPointerMoved(
             pointerDelta.y = position.y - m_lookLastPoint.y;
 
             XMFLOAT2 rotationDelta;
-            rotationDelta.x = pointerDelta.x * MoveLookConstants::RotationGain;       // Scale for control sensitivity.
-            rotationDelta.y = pointerDelta.y * MoveLookConstants::RotationGain;
+            rotationDelta.x = pointerDelta.x * InputConstants::RotationGain;       // Scale for control sensitivity.
+            rotationDelta.y = pointerDelta.y * InputConstants::RotationGain;
             m_lookLastPoint = position;                             // Save for next time through.
 
 #ifdef MOVELOOKCONTROLLER_TRACE
@@ -396,7 +396,7 @@ void MoveLookController::OnPointerMoved(
 
 //----------------------------------------------------------------------
 
-void MoveLookController::OnMouseMoved(
+void InputController::OnMouseMoved(
     _In_ MouseDevice^ /* mouseDevice */,
     _In_ MouseEventArgs^ args
     )
@@ -405,14 +405,14 @@ void MoveLookController::OnMouseMoved(
 
     switch (m_state)
     {
-    case MoveLookControllerState::Active:
+    case InputControllerState::Active:
         XMFLOAT2 mouseDelta;
         mouseDelta.x = static_cast<float>(args->MouseDelta.X);
         mouseDelta.y = static_cast<float>(args->MouseDelta.Y);
 
         XMFLOAT2 rotationDelta;
-        rotationDelta.x = mouseDelta.x * MoveLookConstants::RotationGain;   // Scale for control sensitivity.
-        rotationDelta.y = mouseDelta.y * MoveLookConstants::RotationGain;
+        rotationDelta.x = mouseDelta.x * InputConstants::RotationGain;   // Scale for control sensitivity.
+        rotationDelta.y = mouseDelta.y * InputConstants::RotationGain;
 
         // Update our orientation based on the command.
         m_pitch -= rotationDelta.y;
@@ -438,7 +438,7 @@ void MoveLookController::OnMouseMoved(
 
 //----------------------------------------------------------------------
 
-void MoveLookController::OnPointerReleased(
+void InputController::OnPointerReleased(
     _In_ CoreWindow^ /* sender */,
     _In_ PointerEventArgs^ args
     )
@@ -456,7 +456,7 @@ void MoveLookController::OnPointerReleased(
 
     switch (m_state)
     {
-    case MoveLookControllerState::WaitForInput:
+    case InputControllerState::WaitForInput:
         if (m_buttonInUse && (pointerID == m_buttonPointerID))
         {
             m_buttonInUse = false;
@@ -467,7 +467,7 @@ void MoveLookController::OnPointerReleased(
         }
         break;
 
-    case MoveLookControllerState::Active:
+    case InputControllerState::Active:
         if (pointerID == m_movePointerID)
         {
             m_velocity = XMFLOAT3(0, 0, 0);      // Stop on release.
@@ -501,7 +501,7 @@ void MoveLookController::OnPointerReleased(
 
 //----------------------------------------------------------------------
 
-void MoveLookController::OnPointerExited(
+void InputController::OnPointerExited(
     _In_ CoreWindow^ /* sender */,
     _In_ PointerEventArgs^ args
     )
@@ -519,7 +519,7 @@ void MoveLookController::OnPointerExited(
 
     switch (m_state)
     {
-    case MoveLookControllerState::WaitForInput:
+    case InputControllerState::WaitForInput:
         if (m_buttonInUse && (pointerID == m_buttonPointerID))
         {
             m_buttonInUse = false;
@@ -530,7 +530,7 @@ void MoveLookController::OnPointerExited(
         }
         break;
 
-    case MoveLookControllerState::Active:
+    case InputControllerState::Active:
         if (pointerID == m_movePointerID)
         {
             m_velocity = XMFLOAT3(0, 0, 0);      // Stop on release.
@@ -560,7 +560,7 @@ void MoveLookController::OnPointerExited(
 
 //----------------------------------------------------------------------
 
-void MoveLookController::OnKeyDown(
+void InputController::OnKeyDown(
     _In_ CoreWindow^ /* sender */,
     _In_ KeyEventArgs^ args
     )
@@ -587,7 +587,7 @@ void MoveLookController::OnKeyDown(
 
 //----------------------------------------------------------------------
 
-void MoveLookController::OnKeyUp(
+void InputController::OnKeyUp(
     _In_ CoreWindow^ /* sender */,
     _In_ KeyEventArgs^ args
     )
@@ -621,9 +621,9 @@ void MoveLookController::OnKeyUp(
 
 //----------------------------------------------------------------------
 
-void MoveLookController::ResetState()
+void InputController::ResetState()
 {
-    // Reset the state of the MoveLookController.
+    // Reset the state of the InputController.
     // Disable any active pointer IDs to stop all interaction.
     m_buttonPressed = false;
     m_pausePressed = false;
@@ -651,7 +651,7 @@ void MoveLookController::ResetState()
 
 //----------------------------------------------------------------------
 
-void MoveLookController::UpdatePollingDevices()
+void InputController::UpdatePollingDevices()
 {
     if (m_gamepadsChanged)
     {
@@ -668,7 +668,7 @@ void MoveLookController::UpdatePollingDevices()
         // Check if the cached gamepad is still connected.
         else if (!gamepads->IndexOf(m_activeGamepad, &index))
         {
-            // MoveLookController is intended to handle input for a single player, so it
+            // InputController is intended to handle input for a single player, so it
             // defaults to the first active gamepad.
             m_activeGamepad = gamepads->GetAt(0);
         }
@@ -683,7 +683,7 @@ void MoveLookController::UpdatePollingDevices()
 
     switch (m_state)
     {
-    case MoveLookControllerState::WaitForInput:
+    case InputControllerState::WaitForInput:
         if ((reading.Buttons & GamepadButtons::Menu) == GamepadButtons::Menu)
         {
             m_gamepadStartButtonInUse = true;
@@ -696,7 +696,7 @@ void MoveLookController::UpdatePollingDevices()
         }
         break;
 
-    case MoveLookControllerState::Active:
+    case InputControllerState::Active:
         if ((reading.Buttons & GamepadButtons::Menu) == GamepadButtons::Menu)
         {
             m_gamepadStartButtonInUse = true;
@@ -783,7 +783,7 @@ void MoveLookController::UpdatePollingDevices()
 
 //----------------------------------------------------------------------
 // Turn on mouse cursor, which also disables relative mouse movement tracking.
-void MoveLookController::ShowCursor()
+void InputController::ShowCursor()
 {
     if (m_dispatcher != nullptr)
     {
@@ -812,7 +812,7 @@ void MoveLookController::ShowCursor()
 //----------------------------------------------------------------------
 
 // Turn mouse cursor off (hidden), which also enables relative mouse movement tracking.
-void MoveLookController::HideCursor()
+void InputController::HideCursor()
 {
     if (m_dispatcher != nullptr)
     {
@@ -840,7 +840,7 @@ void MoveLookController::HideCursor()
 
 //----------------------------------------------------------------------
 
-void MoveLookController::SetMoveRect (
+void InputController::SetMoveRect (
     _In_ XMFLOAT2 upperLeft,
     _In_ XMFLOAT2 lowerRight
     )
@@ -854,7 +854,7 @@ void MoveLookController::SetMoveRect (
 
 //----------------------------------------------------------------------
 
-void MoveLookController::SetFireRect (
+void InputController::SetFireRect (
     _In_ XMFLOAT2 upperLeft,
     _In_ XMFLOAT2 lowerRight
     )
@@ -868,7 +868,7 @@ void MoveLookController::SetFireRect (
 
 //----------------------------------------------------------------------
 
-void MoveLookController::WaitForPress(
+void InputController::WaitForPress(
     _In_ XMFLOAT2 upperLeft,
     _In_ XMFLOAT2 lowerRight
     )
@@ -878,7 +878,7 @@ void MoveLookController::WaitForPress(
 #endif
 
     ResetState();
-    m_state = MoveLookControllerState::WaitForInput;
+    m_state = InputControllerState::WaitForInput;
     m_buttonUpperLeft  = upperLeft;
     m_buttonLowerRight = lowerRight;
     ShowCursor();
@@ -886,14 +886,14 @@ void MoveLookController::WaitForPress(
 
 //----------------------------------------------------------------------
 
-void MoveLookController::WaitForPress()
+void InputController::WaitForPress()
 {
 #ifdef MOVELOOKCONTROLLER_TRACE
     DebugTrace(L"WaitForPress (null rect)\n");
 #endif
 
     ResetState();
-    m_state = MoveLookControllerState::WaitForInput;
+    m_state = InputControllerState::WaitForInput;
     m_buttonUpperLeft.x = 0.0f;
     m_buttonUpperLeft.y = 0.0f;
     m_buttonLowerRight.x = 0.0f;
@@ -903,14 +903,14 @@ void MoveLookController::WaitForPress()
 
 //----------------------------------------------------------------------
 
-XMFLOAT3 MoveLookController::Velocity()
+XMFLOAT3 InputController::Velocity()
 {
     return m_velocity;
 }
 
 //----------------------------------------------------------------------
 
-XMFLOAT3 MoveLookController::LookDirection()
+XMFLOAT3 InputController::LookDirection()
 {
     XMFLOAT3 lookDirection;
 
@@ -924,35 +924,35 @@ XMFLOAT3 MoveLookController::LookDirection()
 
 //----------------------------------------------------------------------
 
-float MoveLookController::Pitch()
+float InputController::Pitch()
 {
     return m_pitch;
 }
 
 //----------------------------------------------------------------------
 
-void MoveLookController::Pitch(_In_ float pitch)
+void InputController::Pitch(_In_ float pitch)
 {
     m_pitch = pitch;
 }
 
 //----------------------------------------------------------------------
 
-float MoveLookController::Yaw()
+float InputController::Yaw()
 {
     return m_yaw;
 }
 
 //----------------------------------------------------------------------
 
-void MoveLookController::Yaw(_In_ float yaw)
+void InputController::Yaw(_In_ float yaw)
 {
     m_yaw = yaw;
 }
 
 //----------------------------------------------------------------------
 
-void MoveLookController::Active(_In_ bool active)
+void InputController::Active(_In_ bool active)
 {
     ResetState();
 #ifdef MOVELOOKCONTROLLER_TRACE
@@ -961,22 +961,22 @@ void MoveLookController::Active(_In_ bool active)
 
     if (active)
     {
-        m_state = MoveLookControllerState::Active;
+        m_state = InputControllerState::Active;
         HideCursor();
 
     }
     else
     {
-        m_state = MoveLookControllerState::None;
+        m_state = InputControllerState::None;
         ShowCursor();
     }
 }
 
 //----------------------------------------------------------------------
 
-bool MoveLookController::Active()
+bool InputController::Active()
 {
-    if (m_state == MoveLookControllerState::Active)
+    if (m_state == InputControllerState::Active)
     {
         return true;
     }
@@ -988,21 +988,21 @@ bool MoveLookController::Active()
 
 //----------------------------------------------------------------------
 
-void MoveLookController::AutoFire(_In_ bool autoFire)
+void InputController::AutoFire(_In_ bool autoFire)
 {
     m_autoFire = autoFire;
 }
 
 //----------------------------------------------------------------------
 
-bool MoveLookController::AutoFire()
+bool InputController::AutoFire()
 {
     return m_autoFire;
 }
 
 //----------------------------------------------------------------------
 
-void MoveLookController::Update()
+void InputController::Update()
 {
     UpdatePollingDevices();
 
@@ -1065,9 +1065,9 @@ void MoveLookController::Update()
 
     // Scale for sensitivity adjustment.
     // Our velocity is based on the command. Y is up.
-    m_velocity.x = -wCommand.x * MoveLookConstants::MovementGain;
-    m_velocity.z =  wCommand.y * MoveLookConstants::MovementGain;
-    m_velocity.y =  wCommand.z * MoveLookConstants::MovementGain;
+    m_velocity.x = -wCommand.x * InputConstants::MovementGain;
+    m_velocity.z =  wCommand.y * InputConstants::MovementGain;
+    m_velocity.y =  wCommand.z * InputConstants::MovementGain;
 
     // Clear movement input accumulator for use during next frame.
     m_moveCommand = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -1075,12 +1075,12 @@ void MoveLookController::Update()
 
 //----------------------------------------------------------------------
 
-void MoveLookController::OnBackRequested(
+void InputController::OnBackRequested(
     _In_ Platform::Object^ sender,
     _In_ BackRequestedEventArgs^ args
     )
 {
-    if (m_state == MoveLookControllerState::Active)
+    if (m_state == InputControllerState::Active)
     {
         // The game is currently in active play mode, so hitting the hardware back button
         // will cause the game to pause.
@@ -1097,7 +1097,7 @@ void MoveLookController::OnBackRequested(
 
 //----------------------------------------------------------------------
 
-void MoveLookController::OnGamepadAdded(_In_ Object^ sender, _In_ Gamepad^ gamepad)
+void InputController::OnGamepadAdded(_In_ Object^ sender, _In_ Gamepad^ gamepad)
 {
     // OnGamepadAdded and OnGamepadRemoved can be called from a worker thread. For simplicity,
     // defer updating the active gamepad until Update().
@@ -1106,7 +1106,7 @@ void MoveLookController::OnGamepadAdded(_In_ Object^ sender, _In_ Gamepad^ gamep
 
 //----------------------------------------------------------------------
 
-void MoveLookController::OnGamepadRemoved(_In_ Object^ sender, _In_ Gamepad^ gamepad)
+void InputController::OnGamepadRemoved(_In_ Object^ sender, _In_ Gamepad^ gamepad)
 {
     // OnGamepadAdded and OnGamepadRemoved can be called from a worker thread. For simplicity,
     // defer updating the active gamepad until Update().
@@ -1114,7 +1114,7 @@ void MoveLookController::OnGamepadRemoved(_In_ Object^ sender, _In_ Gamepad^ gam
 }
 
 #ifdef MOVELOOKCONTROLLER_TRACE
-void MoveLookController::DebugTrace(const wchar_t *format, ...)
+void InputController::DebugTrace(const wchar_t *format, ...)
 {
     // Generate the message string.
     va_list args;
