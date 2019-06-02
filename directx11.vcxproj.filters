@@ -23,27 +23,6 @@
     <ClCompile Include="Common\DeviceResources.cpp">
       <Filter>공용</Filter>
     </ClCompile>
-    <ClInclude Include="Content\Sample3DSceneRenderer.h">
-      <Filter>내용</Filter>
-    </ClInclude>
-    <ClInclude Include="Content\SampleFpsTextRenderer.h">
-      <Filter>내용</Filter>
-    </ClInclude>
-    <ClInclude Include="Content\ShaderStructures.h">
-      <Filter>내용</Filter>
-    </ClInclude>
-    <ClCompile Include="Content\Sample3DSceneRenderer.cpp">
-      <Filter>내용</Filter>
-    </ClCompile>
-    <ClCompile Include="Content\SampleFpsTextRenderer.cpp">
-      <Filter>내용</Filter>
-    </ClCompile>
-    <FxCompile Include="Content\SamplePixelShader.hlsl">
-      <Filter>내용</Filter>
-    </FxCompile>
-    <FxCompile Include="Content\SampleVertexShader.hlsl">
-      <Filter>내용</Filter>
-    </FxCompile>
     <Image Include="Assets\LockScreenLogo.scale-200.png">
       <Filter>자산</Filter>
     </Image>
@@ -68,12 +47,14 @@
     <ClCompile Include="directx11Main.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Controller.cpp" />
+    <ClCompile Include="Graphicsclass.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="directx11Main.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Controller.h" />
+    <ClInclude Include="Graphicsclass.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\StoreLogo.png">

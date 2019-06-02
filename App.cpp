@@ -102,13 +102,13 @@ void App::Run()
 		
 		if (m_controller->IsEscRequested())
 		{
-			// Generate the message string.
-			const wchar_t *format = L"fuck\n";
-			va_list args;
-			va_start(args, format);
-			wchar_t message[1024];
-			vswprintf_s(message, 1024, format, args);
-			OutputDebugStringW(message);
+			//// Generate the message string.
+			//const wchar_t *format = L"fuck\n";
+			//va_list args;
+			//va_start(args, format);
+			//wchar_t message[1024];
+			//vswprintf_s(message, 1024, format, args);
+			//OutputDebugStringW(message);
 			m_windowClosed = true;
 			break;
 		}
